@@ -13,7 +13,9 @@ import java.io.FileInputStream
 import android.content.Context.NOTIFICATION_SERVICE
 import androidx.core.content.ContextCompat.getSystemService
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.IntentFilter
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.jetbrains.anko.ctx
 import org.jetbrains.anko.doAsync
@@ -22,11 +24,12 @@ import java.io.File
 
 class PodcastPlayerService : Service() {
 
+    private val PLAY_PAUSE_ACTION = "br.ufpe.cin.android.podcast.services.action.PLAY_PAUSE_ACTION"
     private val NOTIFICATION_ID = 2
     private val mBinder = MusicBinder()
 
     private var mPlayer: MediaPlayer? = null
-    private var currentEpisode = ""
+    private var currentEpisode: ItemFeed? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -34,10 +37,10 @@ class PodcastPlayerService : Service() {
         mPlayer = MediaPlayer()
         mPlayer?.setOnCompletionListener {
             var intent = Intent(ACTION_DELETE_FILE).apply {
-                putExtra(DownloadService.PODCAST_ID, currentEpisode)
+                putExtra(DownloadService.PODCAST_ID, currentEpisode?.title)
             }
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-            currentEpisode = ""
+            currentEpisode = null
         }
 
         createChannel()
@@ -45,6 +48,8 @@ class PodcastPlayerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+        var intentFilter = IntentFilter(PLAY_PAUSE_ACTION)
+        registerReceiver(broadcastReceiver, intentFilter)
         return START_STICKY
     }
 
@@ -53,24 +58,24 @@ class PodcastPlayerService : Service() {
         super.onDestroy()
     }
 
-    fun playPodcast(podcastPath: String, title: String) {
-        if (!currentEpisode.equals(title)) {
-            saveAndPlay(title, podcastPath)
-            currentEpisode = title
-            updateNotification(title)
+    fun playPodcast(podcast: ItemFeed) {
+        if (currentEpisode != podcast) {
+            saveAndPlay(podcast.title, podcast.path)
+            currentEpisode = podcast
+            updateNotification(podcast.title)
         } else {
             if (!mPlayer!!.isPlaying) {
                 mPlayer?.start()
             } else {
-                updatePosition(currentEpisode, mPlayer!!.currentPosition)
+                updatePosition(currentEpisode!!.title, mPlayer!!.currentPosition)
                 mPlayer?.pause()
             }
         }
     }
 
     private fun saveAndPlay(title: String, podcastPath: String){
-        if (!currentEpisode.equals("")) {
-            updatePosition(currentEpisode, mPlayer!!.currentPosition)
+        if (currentEpisode != null) {
+            updatePosition(currentEpisode!!.title, mPlayer!!.currentPosition)
             playFomPosition(title, podcastPath)
         } else {
             play(podcastPath, 0)
@@ -124,12 +129,25 @@ class PodcastPlayerService : Service() {
         val notificationIntent = Intent(applicationContext, PodcastPlayerService::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
+        val playIntent = Intent(PLAY_PAUSE_ACTION)
+        val playPendingIntent = PendingIntent.getBroadcast(applicationContext, 0, playIntent, 0)
+
         return NotificationCompat.Builder(applicationContext, "1")
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .setContentTitle("Podcast Player")
             .setContentText(text)
-            .setContentIntent(pendingIntent).build()
+            .setContentIntent(pendingIntent)
+            .addAction(NotificationCompat.Action(android.R.drawable.ic_media_play, "Play/Pause", playPendingIntent))
+            .build()
+    }
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (currentEpisode != null) {
+                playPodcast(currentEpisode!!)
+            }
+        }
     }
 
     inner class MusicBinder : Binder() {
