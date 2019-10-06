@@ -45,7 +45,7 @@ class DownloadService : IntentService("DownloadService") {
                 }
                 out.flush()
             } finally {
-                Log.e(javaClass.getName(), "Download complete")
+                Log.i(javaClass.getName(), "Download complete")
                 fos.fd.sync()
                 out.close()
                 con.disconnect()

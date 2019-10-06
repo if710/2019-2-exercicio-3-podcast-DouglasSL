@@ -11,6 +11,7 @@ const val ACTION_DOWNLOAD = "br.ufpe.cin.android.podcast.services.action.DOWNLOA
 class DownloaderReceiver(holder: ItemFeedAdapter.ViewHolder) : BroadcastReceiver() {
 
     private val downloadButton = holder.download
+    private val playerButton = holder.player
 
     override fun onReceive(context: Context, intent: Intent) {
         downloadButton.isEnabled = true
@@ -22,6 +23,7 @@ class DownloaderReceiver(holder: ItemFeedAdapter.ViewHolder) : BroadcastReceiver
 
         doAsync {
             db.itemFeedDao().addPath(title, path)
+            playerButton.isEnabled = true
         }
     }
 }

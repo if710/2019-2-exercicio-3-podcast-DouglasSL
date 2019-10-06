@@ -12,6 +12,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.itemlista.view.*
 import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 
 class ItemFeedAdapter (private val ctx : Context) : RecyclerView.Adapter<ItemFeedAdapter.ViewHolder>() {
@@ -64,7 +65,18 @@ class ItemFeedAdapter (private val ctx : Context) : RecyclerView.Adapter<ItemFee
         }
 
         holder.player.setOnClickListener {
-            podcastPlayerService!!.playPodcast(itemFeed.path, itemFeed.title)
+            if (itemFeed.path.equals("")){
+                doAsync {
+                    val db = ItemFeedDatabase.getDatabase(ctx)
+                    val item = db.itemFeedDao().search(itemFeed.title)
+
+                    uiThread {
+                        podcastPlayerService!!.playPodcast(item.path, item.title)
+                    }
+                }
+            } else {
+                podcastPlayerService!!.playPodcast(itemFeed.path, itemFeed.title)
+            }
         }
     }
 
