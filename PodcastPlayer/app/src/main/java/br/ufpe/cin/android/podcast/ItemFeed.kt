@@ -12,7 +12,9 @@ data class ItemFeed(
     val description:
     String,
     val downloadLink: String,
-    val imageUrl: String) {
+    val imageUrl: String,
+    val path: String
+) {
 
     override fun toString(): String {
         return title

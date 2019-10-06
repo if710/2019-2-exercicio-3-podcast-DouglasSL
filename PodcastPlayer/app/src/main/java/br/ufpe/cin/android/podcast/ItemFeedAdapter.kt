@@ -2,12 +2,14 @@ package br.ufpe.cin.android.podcast
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.itemlista.view.*
+import org.jetbrains.anko.doAsync
+
 
 class ItemFeedAdapter (private val itemFeeds: List<ItemFeed>, private val ctx : Context) : RecyclerView.Adapter<ItemFeedAdapter.ViewHolder>() {
 
@@ -22,6 +24,15 @@ class ItemFeedAdapter (private val itemFeeds: List<ItemFeed>, private val ctx : 
         val itemFeed = itemFeeds[position]
         holder.title.text = itemFeed.title
         holder.date.text = itemFeed.pubDate
+        holder.player.isEnabled = false
+
+        doAsync {
+            val db = ItemFeedDatabase.getDatabase(ctx)
+            val item = db.itemFeedDao().search(itemFeed.title)
+            if (!item.path.equals("")) {
+                holder.player.isEnabled = true
+            }
+        }
 
         holder.title.setOnClickListener{
             val intent = Intent(ctx, EpisodeDetailActivity::class.java)
@@ -31,22 +42,19 @@ class ItemFeedAdapter (private val itemFeeds: List<ItemFeed>, private val ctx : 
             intent.putExtra(EpisodeDetailActivity.IMAGE_URL, itemFeed.imageUrl)
             ctx.startActivity(intent)
         }
+
+        holder.download.setOnClickListener {
+            DownloadService.startDownload(ctx, itemFeed.title, itemFeed.downloadLink)
+        }
+
+        holder.player.setOnClickListener {
+        }
     }
 
     class ViewHolder (item : View) : RecyclerView.ViewHolder(item) {
         val title = item.item_title
         val date = item.item_date
         val download = item.item_action
-
-        init {
-            download.setOnClickListener {
-                Toast.makeText(
-                    itemView.context,
-                    "Downloading ${title.text}..",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-
+        val player = item.item_play
     }
 }

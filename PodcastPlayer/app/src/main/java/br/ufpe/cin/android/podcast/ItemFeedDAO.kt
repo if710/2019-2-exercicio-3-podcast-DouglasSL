@@ -19,4 +19,7 @@ interface ItemFeedDAO {
 
     @Query("SELECT * FROM itemfeed WHERE title LIKE :t")
     fun search(t : String) : ItemFeed
+
+    @Query("UPDATE itemfeed SET path = :p WHERE title LIKE :t")
+    fun addPath(t : String, p: String)
 }
