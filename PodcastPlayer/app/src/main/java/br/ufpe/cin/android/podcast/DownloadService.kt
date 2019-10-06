@@ -7,14 +7,13 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
-
-private const val PODCAST_ID = "PODCAST_ID"
 
 class DownloadService : IntentService("DownloadService") {
 
@@ -51,8 +50,11 @@ class DownloadService : IntentService("DownloadService") {
                 out.close()
                 con.disconnect()
 
-                val db = ItemFeedDatabase.getDatabase(applicationContext)
-                db.itemFeedDao().addPath(intent.getStringExtra(PODCAST_ID), output.path)
+                val intent = Intent(ACTION_DOWNLOAD).apply {
+                    putExtra(PODCAST_PATH, output.path)
+                    putExtra(PODCAST_ID, title)
+                }
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
             }
 
         } catch (e: Exception) {
@@ -61,6 +63,9 @@ class DownloadService : IntentService("DownloadService") {
     }
 
     companion object {
+        const val PODCAST_PATH = "PODCAST_PATH"
+        const val PODCAST_ID = "PODCAST_ID"
+
         fun startDownload(context: Context, id: String, url: String) {
             val intent = Intent(context, DownloadService::class.java).apply {
                 putExtra(PODCAST_ID, id)

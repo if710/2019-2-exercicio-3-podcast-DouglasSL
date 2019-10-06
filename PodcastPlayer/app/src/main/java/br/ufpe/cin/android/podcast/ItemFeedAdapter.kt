@@ -2,10 +2,13 @@ package br.ufpe.cin.android.podcast
 
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.itemlista.view.*
 import org.jetbrains.anko.doAsync
@@ -47,7 +50,17 @@ class ItemFeedAdapter (private val ctx : Context) : RecyclerView.Adapter<ItemFee
         }
 
         holder.download.setOnClickListener {
+            if (!itemFeed.path.equals("")) {
+                Toast.makeText(ctx, "Episode already downloaded!", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            holder.download.isEnabled = false
             DownloadService.startDownload(ctx, itemFeed.title, itemFeed.downloadLink)
+            val filter = IntentFilter()
+            filter.addAction(ACTION_DOWNLOAD)
+            val receiver = DownloaderReceiver(holder)
+            LocalBroadcastManager.getInstance(ctx).registerReceiver(receiver, filter)
         }
 
         holder.player.setOnClickListener {
