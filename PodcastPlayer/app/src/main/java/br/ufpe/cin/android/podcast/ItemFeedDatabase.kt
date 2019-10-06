@@ -8,7 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.migration.Migration
 
 
-@Database(entities = [ItemFeed::class], version = 2, exportSchema = false)
+@Database(entities = [ItemFeed::class], version = 3, exportSchema = false)
 abstract class ItemFeedDatabase : RoomDatabase() {
     abstract fun itemFeedDao(): ItemFeedDAO
 

@@ -126,7 +126,16 @@ object Parser {
                 skip(parser)
             }
         }
-        return ItemFeed(title!!, link!!, pubDate!!, description!!, downloadLink!!, imageUrl?:imageUrl!!, "")
+        return ItemFeed(
+            title!!,
+            link!!,
+            pubDate!!,
+            description!!,
+            downloadLink!!,
+            imageUrl ?: imageUrl!!,
+            "",
+            0
+        )
     }
 
     // Processa tags de forma parametrizada no feed.
