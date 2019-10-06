@@ -14,9 +14,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <receiver
-            android:name=".DownloaderReceiver"
+            android:name=".DeleteFileReceiver"
             android:enabled="true"
             android:exported="true"></receiver>
+        <receiver
+            android:name=".DownloaderReceiver"
+            android:enabled="true"
+            android:exported="true" />
 
         <service
             android:name=".PodcastPlayerService"

@@ -14,8 +14,10 @@ import android.content.Context.NOTIFICATION_SERVICE
 import androidx.core.content.ContextCompat.getSystemService
 import android.app.NotificationManager
 import android.content.Context
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.jetbrains.anko.ctx
 import org.jetbrains.anko.doAsync
+import java.io.File
 
 
 class PodcastPlayerService : Service() {
@@ -30,7 +32,13 @@ class PodcastPlayerService : Service() {
         super.onCreate()
 
         mPlayer = MediaPlayer()
-        mPlayer?.isLooping = true
+        mPlayer?.setOnCompletionListener {
+            var intent = Intent(ACTION_DELETE_FILE).apply {
+                putExtra(DownloadService.PODCAST_ID, currentEpisode)
+            }
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+            currentEpisode = ""
+        }
 
         createChannel()
         startForeground(NOTIFICATION_ID, getNotification(""))
@@ -70,14 +78,14 @@ class PodcastPlayerService : Service() {
     }
 
     private fun updatePosition(title: String, position: Int) {
-        val db = ItemFeedDatabase.getDatabase(this)
+        var db = ItemFeedDatabase.getDatabase(this)
         doAsync {
             db.itemFeedDao().updatePosition(title, position)
         }
     }
 
     private fun playFomPosition(title: String, podcastPath: String) {
-        val db = ItemFeedDatabase.getDatabase(this)
+        var db = ItemFeedDatabase.getDatabase(this)
         doAsync {
             var episode = db.itemFeedDao().search(title)
             play(podcastPath, episode.lastPosition)
