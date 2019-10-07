@@ -3,10 +3,11 @@ package br.ufpe.cin.android.podcast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import org.jetbrains.anko.doAsync
 import java.io.File
 
-const val ACTION_DELETE_FILE = "br.ufpe.cin.android.podcast.services.action.DELETE_FILE"
+const val ACTION_DELETE_FILE = "br.ufpe.cin.android.podcast.services.action.DELETE_FILE_ACTION"
 
 class DeleteFileReceiver(holder: ItemFeedAdapter.ViewHolder) : BroadcastReceiver() {
 
@@ -23,7 +24,7 @@ class DeleteFileReceiver(holder: ItemFeedAdapter.ViewHolder) : BroadcastReceiver
             db.itemFeedDao().updatePosition(title, 0)
             db.itemFeedDao().addPath(title, "")
 
-            var file = File(item.path, "${title}.mp3")
+            var file = File(item.path)
             if (file.exists()) {
                 file.delete()
             }

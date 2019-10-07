@@ -65,7 +65,7 @@ class ItemFeedAdapter (private val ctx : Context) : RecyclerView.Adapter<ItemFee
 
         holder.player.setOnClickListener {
             var intentFilter = IntentFilter(ACTION_DELETE_FILE)
-            var receiver = DownloaderReceiver(holder)
+            var receiver = DeleteFileReceiver(holder)
             LocalBroadcastManager.getInstance(ctx).registerReceiver(receiver, intentFilter)
 
             if (itemFeed.path.equals("")){
