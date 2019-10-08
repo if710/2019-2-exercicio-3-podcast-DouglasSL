@@ -74,11 +74,11 @@ class ItemFeedAdapter (private val ctx : Context) : RecyclerView.Adapter<ItemFee
                     val item = db.itemFeedDao().search(itemFeed.title)
 
                     uiThread {
-                        podcastPlayerService!!.playPodcast(item)
+                        podcastPlayerService!!.playPodcast(item, holder)
                     }
                 }
             } else {
-                podcastPlayerService!!.playPodcast(itemFeed)
+                podcastPlayerService!!.playPodcast(itemFeed, holder)
             }
         }
     }

@@ -30,6 +30,7 @@ class PodcastPlayerService : Service() {
 
     private var mPlayer: MediaPlayer? = null
     private var currentEpisode: ItemFeed? = null
+    private var currentHolder: ItemFeedAdapter.ViewHolder? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -41,6 +42,7 @@ class PodcastPlayerService : Service() {
             }
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
             currentEpisode = null
+            currentHolder = null
         }
 
         createChannel()
@@ -58,19 +60,28 @@ class PodcastPlayerService : Service() {
         super.onDestroy()
     }
 
-    fun playPodcast(podcast: ItemFeed) {
+    fun playPodcast(podcast: ItemFeed, holder: ItemFeedAdapter.ViewHolder ) {
+        if (currentHolder == null) {
+            currentHolder = holder
+        }
+
         if (currentEpisode != podcast) {
+            currentHolder!!.player.setImageResource(android.R.drawable.ic_media_play)
             saveAndPlay(podcast.title, podcast.path)
+            currentHolder = holder
             currentEpisode = podcast
-            updateNotification(podcast.title)
         } else {
             if (!mPlayer!!.isPlaying) {
                 mPlayer?.start()
+                currentHolder!!.player.setImageResource(android.R.drawable.ic_media_pause)
             } else {
                 updatePosition(currentEpisode!!.title, mPlayer!!.currentPosition)
                 mPlayer?.pause()
+                currentHolder!!.player.setImageResource(android.R.drawable.ic_media_play)
             }
         }
+
+        updateNotification(currentEpisode!!.title)
     }
 
     private fun saveAndPlay(title: String, podcastPath: String){
@@ -105,6 +116,7 @@ class PodcastPlayerService : Service() {
         mPlayer?.seekTo(position)
         fis.close()
         mPlayer?.start()
+        currentHolder!!.player.setImageResource(android.R.drawable.ic_media_pause)
     }
 
     private fun createChannel() {
@@ -132,20 +144,23 @@ class PodcastPlayerService : Service() {
         val playIntent = Intent(PLAY_PAUSE_ACTION)
         val playPendingIntent = PendingIntent.getBroadcast(applicationContext, 0, playIntent, 0)
 
+        var actionName = if(!mPlayer!!.isPlaying) "Play" else "Pause"
+
         return NotificationCompat.Builder(applicationContext, "1")
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .setContentTitle("Podcast Player")
             .setContentText(text)
             .setContentIntent(pendingIntent)
-            .addAction(NotificationCompat.Action(android.R.drawable.ic_media_play, "Play/Pause", playPendingIntent))
+            .addAction(NotificationCompat.Action(android.R.drawable.ic_media_play, actionName, playPendingIntent))
             .build()
     }
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (currentEpisode != null) {
-                playPodcast(currentEpisode!!)
+                updateNotification(currentEpisode!!.title)
+                playPodcast(currentEpisode!!, currentHolder!!)
             }
         }
     }

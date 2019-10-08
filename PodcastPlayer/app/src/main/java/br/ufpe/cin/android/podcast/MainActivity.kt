@@ -1,6 +1,7 @@
 package br.ufpe.cin.android.podcast
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.*
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
@@ -91,6 +92,11 @@ class MainActivity : AppCompatActivity() {
         isBound = false
         unbindService(sConn)
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        podcastPlayerService!!.stopSelf()
+        super.onDestroy()
     }
 
     fun checkPermissions() {
